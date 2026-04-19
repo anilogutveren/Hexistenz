@@ -1,0 +1,7 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 800'>
+  <rect width='100%' height='100%' fill='#070707'/>
+  <text x='40' y='120' fill='#b90f0f' font-size='42' font-family='sans-serif'>HEXISTENZ</text>
+  <rect x='40' y='160' width='520' height='380' rx='8' fill='#0f0f0f' stroke='#1a1a1a'/>
+  <text x='60' y='220' fill='#ddd' font-size='18'>May 7, 2026 — Bar La Embajada</text>
+  <text x='60' y='260' fill='#aaa' font-size='14'>Stuttgart • Tickets: TBA</text>
+</svg>

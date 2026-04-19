@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Contact — Hexistenz</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <img src="../.vscode/copilot/Hexistenz.jpeg" alt="logo" class="logo">
+      <h1>Hexistenz</h1>
+    </div>
+    <nav class="main-nav">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="music.html">Music</a>
+      <a href="tour.html">Tour</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="news">
+      <h3>Contact</h3>
+      <p>For booking and press, email: <strong>booking@hexistenz.band</strong></p>
+      <p>Or send a message below (this is a static demo — replace with your backend).</p>
+
+      <form id="contact-form" onsubmit="event.preventDefault(); alert('Message demo sent — implement backend');">
+        <label>Name<br><input type="text" name="name" required></label><br><br>
+        <label>Email<br><input type="email" name="email" required></label><br><br>
+        <label>Message<br><textarea name="message" rows="6" required></textarea></label><br><br>
+        <button type="submit">Send</button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">© Hexistenz</footer>
+  <script src="js/script.js"></script>
+</body>
+</html>
