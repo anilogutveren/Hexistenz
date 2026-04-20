@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs>
+    <linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b0000;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2a0000;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="400" height="400" fill="url(#grad4)"/>
+  <!-- Head -->
+  <circle cx="200" cy="120" r="60" fill="#d1a680"/>
+  <!-- Body -->
+  <rect x="160" y="190" width="80" height="140" rx="10" fill="#1a1a1a"/>
+  <!-- Arm left -->
+  <rect x="80" y="220" width="80" height="20" rx="10" fill="#1a1a1a"/>
+  <!-- Arm right -->
+  <rect x="240" y="220" width="80" height="20" rx="10" fill="#1a1a1a"/>
+  <!-- Drum kick -->
+  <ellipse cx="100" cy="300" rx="50" ry="60" fill="#4a4a4a" stroke="#2a2a2a" stroke-width="2"/>
+  <!-- Drum tom -->
+  <ellipse cx="280" cy="280" rx="35" ry="45" fill="#3a3a3a" stroke="#1a1a1a" stroke-width="2"/>
+  <!-- Cymbals -->
+  <circle cx="150" cy="200" r="30" fill="none" stroke="#888" stroke-width="2"/>
+  <circle cx="250" cy="200" r="30" fill="none" stroke="#888" stroke-width="2"/>
+  <!-- Drumsticks in hands -->
+  <line x1="160" y1="225" x2="140" y2="280" stroke="#1a1a1a" stroke-width="4"/>
+  <line x1="240" y1="225" x2="260" y2="280" stroke="#1a1a1a" stroke-width="4"/>
+  <!-- Head detail -->
+  <path d="M 160 85 Q 140 75 145 110 Q 150 140 165 140" fill="#1a1a1a"/>
+  <!-- Face -->
+  <circle cx="185" cy="115" r="5" fill="#1a1a1a"/>
+  <circle cx="215" cy="115" r="5" fill="#1a1a1a"/>
+</svg>
