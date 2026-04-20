@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Website Title</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        position: relative;
+      }
+
+      header {
+        padding: 2em;
+        text-align: center;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 2em;
+      }
+
+      h2 {
+        margin: 0.3em 0 0 0;
+        font-size: 1.2em;
+        color: #555;
+      }
+
+      /* Floating Button */
+      #chatToggle {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        font-size: 28px;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Chat Popup */
+      #chatPopup {
+        display: none;
+        flex-direction: column;
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 300px;
+        height: 400px;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        z-index: 1000;
+      }
+
+      #chatHeader {
+        background: #007bff;
+        color: white;
+        padding: 10px;
+        text-align: center;
+        font-weight: bold;
+      }
+
+      #chat {
+        flex: 1;
+        padding: 10px;
+        overflow-y: auto;
+        background: #f9f9f9;
+      }
+
+      .msg {
+        margin: 5px 0;
+      }
+      .user {
+        color: blue;
+      }
+      .bot {
+        color: green;
+      }
+      .error {
+        color: red;
+        font-style: italic;
+      }
+
+      #inputContainer {
+        display: flex;
+        padding: 10px;
+        border-top: 1px solid #ccc;
+        background: #fff;
+      }
+
+      #userInput {
+        flex: 1;
+        padding: 5px;
+        font-size: 14px;
+      }
+
+      #sendBtn {
+        margin-left: 5px;
+        padding: 5px 10px;
+        font-size: 14px;
+      }
+
+      .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #ccc;
+        border-top: 2px solid #333;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        vertical-align: middle;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Website Title</h1>
+      <h2>Website subtitle</h2>
+    </header>
+
+    <!-- Floating button -->
+    <button id="chatToggle" title="Open chat">💬</button>
+
+    <!-- Chat popup -->
+    <div id="chatPopup">
+      <div id="chatHeader">Chatbot</div>
+      <div id="chat"></div>
+      <div id="inputContainer">
+        <input id="userInput" type="text" placeholder="Say something..." />
+        <button id="sendBtn">Send</button>
+      </div>
+    </div>
+
+    <script>
+      const CHATBOT_URL = "https://n8n.bottribe.io/webhook/chatbot";
+      const toggleBtn = document.getElementById("chatToggle");
+      const popup = document.getElementById("chatPopup");
+      const input = document.getElementById("userInput");
+      const chat = document.getElementById("chat");
+      const sendBtn = document.getElementById("sendBtn");
+
+      // Toggle popup visibility
+      toggleBtn.onclick = () => {
+        popup.style.display = popup.style.display === "flex" ? "none" : "flex";
+        if (popup.style.display === "flex") {
+          setTimeout(() => input.focus(), 100);
+        }
+      };
+
+      // Send on Enter key
+      input.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          sendMessage();
+        }
+      });
+
+      // Send on button click
+      sendBtn.onclick = sendMessage;
+
+      async function sendMessage() {
+        const message = input.value.trim();
+        if (!message) return;
+
+        chat.innerHTML += `<div class="msg user"><b>You:</b> ${message}</div>`;
+        input.value = "";
+        input.disabled = true;
+
+        const spinnerId = "spinner_" + Date.now();
+        chat.innerHTML += `<div class="msg bot" id="${spinnerId}"><b>Bot:</b> <span class="spinner"></span></div>`;
+        chat.scrollTop = chat.scrollHeight;
+
+        try {
+          const response = await fetch(CHATBOT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message }),
+          });
+
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+          const data = await response.json();
+          const reply = data.output || "[No reply returned]";
+
+          const spinnerDiv = document.getElementById(spinnerId);
+          if (spinnerDiv) spinnerDiv.innerHTML = `<b>Bot:</b> ${reply}`;
+        } catch (err) {
+          const spinnerDiv = document.getElementById(spinnerId);
+          if (spinnerDiv) {
+            spinnerDiv.innerHTML = `<b>Error:</b> ${err.message}`;
+            spinnerDiv.classList.add("error");
+          }
+
+          setTimeout(() => {
+            if (spinnerDiv) spinnerDiv.remove();
+          }, 5000);
+        }
+
+        input.disabled = false;
+        input.focus();
+        chat.scrollTop = chat.scrollHeight;
+      }
+    </script>
+  </body>
+</html>

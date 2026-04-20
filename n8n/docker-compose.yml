@@ -1,0 +1,63 @@
+services:
+  n8n:
+    image: registry-emea.app.corpintra.net/ai-delivery/n8n-ai-ecosystem-base:latest
+    platform: linux/amd64
+    ports:
+      - "5678:5678"
+    networks:
+      - n8n-net
+    volumes:
+      - n8n_data:/home/node/.n8n
+    environment:
+      - EXTERNAL_FRONTEND_HOOKS_URLS=
+      - N8N_DIAGNOSTICS_CONFIG_BACKEND=
+      - N8N_DIAGNOSTICS_CONFIG_FRONTEND=
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_RUNNERS_AUTH_TOKEN=supersecrettoken  
+      - N8N_RUNNERS_BROKER_LISTEN_ADDRESS=0.0.0.0
+      - N8N_RUNNERS_BROKER_PORT=5679
+      - N8N_RUNNERS_DISABLED_MODES=embedded
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_RUNNERS_JAVASCRIPT_ENABLED=true
+      - N8N_RUNNERS_MODE=external
+      - N8N_RUNNERS_PYTHON_ENABLED=true
+      - N8N_TEMPLATES_ENABLED=false
+      - N8N_VERSION_NOTIFICATIONS_ENABLED=false
+  n8n-runners:
+    image: registry-emea.app.corpintra.net/ai-delivery/n8n-ai-ecosystem-runners:latest
+    platform: linux/arm64
+    networks:
+      - n8n-net
+    environment:
+      - EXTERNAL_FRONTEND_HOOKS_URLS=
+      - N8N_DIAGNOSTICS_CONFIG_BACKEND=
+      - N8N_DIAGNOSTICS_CONFIG_FRONTEND=
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_RUNNERS_AUTH_TOKEN=supersecrettoken  
+      - N8N_RUNNERS_TASK_BROKER_URI=http://n8n:5679
+      - N8N_VERSION_NOTIFICATIONS_ENABLED=false
+    restart: always
+    depends_on:
+      - n8n
+
+  postgres-memory:
+    image: postgres
+    restart: always
+    container_name: n8n-memory-db
+    networks:
+      - n8n-net
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: n8n_user
+      POSTGRES_PASSWORD: e5362baf-c777-4d57-a609-6eaf1f9e87f6
+      POSTGRES_DB: n8n-memory-db
+    volumes:
+      - postgres_memory_data:/var/lib/postgresql/data
+
+volumes:
+  n8n_data:
+  postgres_memory_data:
+
+networks:
+  n8n-net:

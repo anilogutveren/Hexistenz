@@ -1,0 +1,173 @@
+{
+  "name": "IAM Support Optimized Workflow",
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [0, 0],
+      "parameters": { "public": true }
+    },
+
+    {
+      "id": "ai-agent",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [200, 0],
+      "parameters": {
+        "text": "={{ $json.chatInput }}"
+      }
+    },
+
+    {
+      "id": "decide-devin",
+      "name": "Should Use Devin?",
+      "type": "n8n-nodes-base.if",
+      "position": [400, 0],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.output.length }}",
+              "operation": "larger",
+              "value2": "300"
+            }
+          ]
+        }
+      }
+    },
+
+    {
+      "id": "devin-create",
+      "name": "Devin Create Session",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [600, -100],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.devinenterprise.com/v1/sessions",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        }
+      }
+    },
+
+    {
+      "id": "poll-loop",
+      "name": "Poll Devin",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [800, -100],
+      "parameters": {
+        "url": "={{ 'https://api.devinenterprise.com/v1/sessions/' + $json.session_id }}"
+      }
+    },
+
+    {
+      "id": "check-status",
+      "name": "Check Status",
+      "type": "n8n-nodes-base.if",
+      "position": [1000, -100],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "operation": "equal",
+              "value2": "completed"
+            }
+          ]
+        }
+      }
+    },
+
+    {
+      "id": "wait-retry",
+      "name": "Wait 5s",
+      "type": "n8n-nodes-base.wait",
+      "position": [1200, -200],
+      "parameters": {
+        "amount": 5
+      }
+    },
+
+    {
+      "id": "fallback",
+      "name": "Fallback to AI",
+      "type": "n8n-nodes-base.set",
+      "position": [600, 100],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "finalText",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        }
+      }
+    },
+
+    {
+      "id": "format",
+      "name": "Format Message",
+      "type": "n8n-nodes-base.set",
+      "position": [1400, 0],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "text",
+              "value": "={{ $json.finalText || $json.output }}"
+            }
+          ]
+        }
+      }
+    },
+
+    {
+      "id": "teams",
+      "name": "Send to Teams",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1600, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "YOUR_TEAMS_WEBHOOK",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "trigger": { "main": [[{ "node": "ai-agent" }]] },
+    "ai-agent": { "main": [[{ "node": "decide-devin" }]] },
+    "decide-devin": {
+      "main": [
+        [{ "node": "devin-create" }],
+        [{ "node": "fallback" }]
+      ]
+    },
+    "devin-create": { "main": [[{ "node": "poll-loop" }]] },
+    "poll-loop": { "main": [[{ "node": "check-status" }]] },
+    "check-status": {
+      "main": [
+        [{ "node": "format" }],
+        [{ "node": "wait-retry" }]
+      ]
+    },
+    "wait-retry": { "main": [[{ "node": "poll-loop" }]] },
+    "fallback": { "main": [[{ "node": "format" }]] },
+    "format": { "main": [[{ "node": "teams" }]] }
+  }
+}

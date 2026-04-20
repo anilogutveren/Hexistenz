@@ -1,0 +1,10 @@
+services:
+  db:
+    image: postgres
+    restart: always
+    container_name: chat_memory
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: n8n_user
+      POSTGRES_PASSWORD: n8n_password

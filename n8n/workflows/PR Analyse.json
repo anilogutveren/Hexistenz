@@ -1,0 +1,187 @@
+{
+  "name": "PR Analyse",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// === Konfiguration ===\n// Passe hier Repository und Query an deine Beduerfnisse an.\n\nconst repoOwner = 'mb-home';\nconst repoName  = 'n8n-tutorial-pr-agent';\nconst maxPRs    = 50;\n\nconst query = `{\n  repository(owner: \"${repoOwner}\", name: \"${repoName}\") {\n    pullRequests(\n      first: ${maxPRs},\n      states: [OPEN, CLOSED, MERGED],\n      orderBy: { field: UPDATED_AT, direction: DESC }\n    ) {\n      nodes {\n        number\n        title\n        state\n        body\n        createdAt\n        updatedAt\n        mergedAt\n        author { login }\n        labels(first: 10) { nodes { name } }\n        changedFiles\n        additions\n        deletions\n      }\n    }\n  }\n}`;\n\nreturn [{\n  json: {\n    requestBody: JSON.stringify({ query })\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "id": "9a145f71-aa1f-4d57-8106-6a8a97499acd",
+      "name": "Config"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://mercedes-benz.ghe.com/api/graphql",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.requestBody }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        0
+      ],
+      "id": "a2bd92f7-de8f-43c1-ad80-7528974e60c4",
+      "name": "Fetch Pull Requests",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "K2hV2L3myiQBDpVw",
+          "name": "Header Auth account 3"
+        },
+        "httpBearerAuth": {
+          "id": "VhDCiukMBNbDA8tN",
+          "name": "n8n-tutorial-pr-agent auth"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('When chat message received').first().json.chatInput + '\\n\\n--- Pull Request Data ---\\n' + JSON.stringify($json.data.repository.pullRequests.nodes, null, 2) }}",
+        "options": {
+          "systemMessage": "You are a helpful assistant who answers questions about pull requests in the GitHub repository mb-home/n8n-tutorial-pr-agent. The user asks you a question along with the current pull request data in JSON format. Analyze the data and answer the question.\n\nRules:\n- Refer to specific PR numbers, authors, and dates.\n- If the question cannot be answered based on the PR data, state this clearly.\n- Summarize information in a structured manner (using lists and tables where appropriate)."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        720,
+        0
+      ],
+      "id": "5b72cbb1-f86a-493f-b0ad-161fd3926f2b",
+      "name": "PR Analyse Agent"
+    },
+    {
+      "parameters": {
+        "additionalFields": {}
+      },
+      "type": "CUSTOM.nexusModelNode",
+      "typeVersion": 1,
+      "position": [
+        608,
+        224
+      ],
+      "id": "051aeb6e-8112-4589-af62-821e2d3df42f",
+      "name": "Nexus Chat Model (gpt-4o)",
+      "credentials": {
+        "Nexus": {
+          "id": "SgHLEWJxHKsDhXHH",
+          "name": "PUBLIC Nexus Credential"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        736,
+        224
+      ],
+      "id": "5bc69cb7-4e51-40db-ab1f-18e90603ba28",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "W06qhQc19rxRsfFi",
+          "name": "PUBLIC Postgres Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "328dffc8-b417-46c9-877f-7142f281ec07",
+      "name": "When chat message received",
+      "webhookId": "7ec34172-cbfd-4282-b336-193251a9aeb2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Fetch Pull Requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Pull Requests": {
+      "main": [
+        [
+          {
+            "node": "PR Analyse Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nexus Chat Model (gpt-4o)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "PR Analyse Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "PR Analyse Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d0c99933-5d37-4f92-b558-d57dfcfd3f60",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "02416f4bf629a70cc5402a730467caa0f45d6757216724288b90de96b268b1a7"
+  },
+  "id": "rWcksGQgs5LqZ5l0",
+  "tags": []
+}
